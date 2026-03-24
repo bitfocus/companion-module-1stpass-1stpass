@@ -1,0 +1,29 @@
+{
+	"name": "companion-module-1stpass-1stpass",
+	"version": "0.1.0",
+	"main": "dist/main.js",
+	"type": "module",
+	"scripts": {
+		"build": "rimraf dist && tsc -p tsconfig.build.json",
+		"dev": "tsc -p tsconfig.build.json --watch"
+	},
+	"license": "MIT",
+	"repository": "https://github.com/1stpass/companion-module-1stpass-1stpass",
+	"bugs": "https://github.com/1stpass/companion-module-1stpass-1stpass/issues",
+	"author": "1stPass",
+	"homepage": "https://1stpass.app",
+	"engines": {
+		"node": "^22.8"
+	},
+	"dependencies": {
+		"@companion-module/base": "~1.14.1",
+		"ws": "^8.18.0"
+	},
+	"devDependencies": {
+		"@companion-module/tools": "^2.6.1",
+		"@types/node": "^22.19.3",
+		"@types/ws": "^8.18.1",
+		"rimraf": "^6.1.2",
+		"typescript": "~5.9.3"
+	}
+}

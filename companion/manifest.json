@@ -1,0 +1,26 @@
+{
+	"id": "1stpass-1stpass",
+	"name": "1stPass",
+	"shortname": "1stPass",
+	"description": "Control markers and titles in 1stPass",
+	"version": "0.1.0",
+	"license": "MIT",
+	"repository": "https://github.com/1stpass/companion-module-1stpass-1stpass",
+	"bugs": "https://github.com/1stpass/companion-module-1stpass-1stpass/issues",
+	"maintainers": [
+		{
+			"name": "1stPass",
+			"email": "suggestion@1stpass.app"
+		}
+	],
+	"runtime": {
+		"type": "node22",
+		"api": "nodejs-ipc",
+		"apiVersion": "0.0.0",
+		"entrypoint": "../dist/main.js"
+	},
+	"legacyIds": [],
+	"manufacturer": "1stPass",
+	"products": ["1stPass"],
+	"keywords": ["timecode", "ltc", "markers", "titles"]
+}
