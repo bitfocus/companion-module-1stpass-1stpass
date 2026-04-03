@@ -3,7 +3,7 @@
 	"name": "1stPass",
 	"shortname": "1stPass",
 	"description": "Control markers and titles in 1stPass",
-	"version": "0.1.0",
+	"version": "0.0.0",
 	"license": "MIT",
 	"repository": "https://github.com/1stpass/companion-module-1stpass-1stpass",
 	"bugs": "https://github.com/1stpass/companion-module-1stpass-1stpass/issues",
