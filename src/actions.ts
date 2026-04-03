@@ -117,5 +117,33 @@ export function UpdateActions(self: ModuleInstance): void {
 				self.connection.send({ command: 'next_title' })
 			},
 		},
+
+		select_camera: {
+			name: 'Select Camera',
+			description: 'Set a camera to standby (preview). Does nothing if already in standby.',
+			options: [
+				{
+					id: 'camera',
+					type: 'number',
+					label: 'Camera Number',
+					default: 1,
+					min: 1,
+					max: 99,
+				},
+			],
+			callback: async (event) => {
+				const camera = Number(event.options.camera) || 1
+				self.connection.send({ command: 'select_camera', camera })
+			},
+		},
+
+		camera_cut: {
+			name: 'Camera Cut',
+			description: 'Cut to the standby camera (promotes standby to program) and record to timeline',
+			options: [],
+			callback: async () => {
+				self.connection.send({ command: 'camera_cut' })
+			},
+		},
 	})
 }

@@ -21,6 +21,7 @@ export interface ServerResponse {
 	// Native server format (flat fields)
 	timecode?: string
 	command?: string
+	camera_name?: string
 	error?: string
 	message?: string
 }
@@ -147,6 +148,15 @@ export class ConnectionManager {
 			this.self.log('info', `Title recorded: ${response.title.title1} @ ${response.title.timecode}`)
 		}
 
+		// Native server format — select_camera (no timecode, has camera_name)
+		if (response.command === 'select_camera' && response.camera_name) {
+			this.self.setVariableValues({
+				standby_camera: response.camera_name,
+			})
+			this.self.log('info', `Camera selected: ${response.camera_name}`)
+			return
+		}
+
 		// Native server format (flat timecode + command fields)
 		if (!response.marker && !response.title && response.timecode) {
 			if (response.command === 'create_marker') {
@@ -157,6 +167,11 @@ export class ConnectionManager {
 				this.self.setVariableValues({
 					last_title_timecode: response.timecode,
 				})
+			} else if (response.command === 'camera_cut') {
+				this.self.setVariableValues({
+					last_cut_timecode: response.timecode,
+				})
+				this.self.log('info', `Camera cut recorded @ ${response.timecode}`)
 			}
 		}
 	}
