@@ -145,5 +145,14 @@ export function UpdateActions(self: ModuleInstance): void {
 				self.connection.send({ command: 'camera_cut' })
 			},
 		},
+
+		camera_fade: {
+			name: 'Camera Fade',
+			description: 'Fade to the standby camera. Records a fade transition to the timeline using the event’s configured fade duration.',
+			options: [],
+			callback: async () => {
+				self.connection.send({ command: 'camera_fade' })
+			},
+		},
 	})
 }

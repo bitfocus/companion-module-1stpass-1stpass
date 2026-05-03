@@ -7,6 +7,7 @@ export function UpdateVariableDefinitions(self: ModuleInstance): void {
 		{ variableId: 'last_marker_text', name: 'Last Marker Text' },
 		{ variableId: 'last_title_timecode', name: 'Last Title Timecode' },
 		{ variableId: 'last_cut_timecode', name: 'Last Camera Cut Timecode' },
+		{ variableId: 'last_fade_timecode', name: 'Last Camera Fade Timecode' },
 		{ variableId: 'standby_camera', name: 'Standby Camera Name' },
 	])
 
@@ -16,6 +17,7 @@ export function UpdateVariableDefinitions(self: ModuleInstance): void {
 		last_marker_text: '',
 		last_title_timecode: '',
 		last_cut_timecode: '',
+		last_fade_timecode: '',
 		standby_camera: '',
 	})
 }

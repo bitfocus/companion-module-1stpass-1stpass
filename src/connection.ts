@@ -172,6 +172,11 @@ export class ConnectionManager {
 					last_cut_timecode: response.timecode,
 				})
 				this.self.log('info', `Camera cut recorded @ ${response.timecode}`)
+			} else if (response.command === 'camera_fade') {
+				this.self.setVariableValues({
+					last_fade_timecode: response.timecode,
+				})
+				this.self.log('info', `Camera fade recorded @ ${response.timecode}`)
 			}
 		}
 	}
