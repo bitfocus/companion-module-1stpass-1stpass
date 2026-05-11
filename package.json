@@ -8,8 +8,8 @@
 		"dev": "tsc -p tsconfig.build.json --watch"
 	},
 	"license": "MIT",
-	"repository": "https://github.com/1stpass/companion-module-1stpass-1stpass",
-	"bugs": "https://github.com/1stpass/companion-module-1stpass-1stpass/issues",
+	"repository": "https://github.com/bitfocus/companion-module-1stpass-1stpass",
+	"bugs": "https://github.com/bitfocus/companion-module-1stpass-1stpass/issues",
 	"author": "1stPass",
 	"homepage": "https://1stpass.app",
 	"engines": {
