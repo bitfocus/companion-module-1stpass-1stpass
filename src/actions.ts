@@ -7,8 +7,19 @@ const BUTTON_TEXT_VARIABLE = '$(internal:b_text_$(this:page)_$(this:row)_$(this:
 // Color palette matching the SwiftUI Edit Marker dialog
 const PRESET_COLORS = ['#007AFF', '#34C759', '#FF3B30', '#FF9500', '#AF52DE', '#5856D6', '#00C7BE', '#FFCC00']
 
-/** Convert a companion numeric color (from combineRgb / colorpicker) to #RRGGBB hex string */
-function colorToHex(color: number): string {
+// Default marker color (1stPass blue) used as fallback when the colorpicker value is invalid
+const DEFAULT_MARKER_COLOR = '#007AFF'
+
+const DEFAULT_TYPE_ID = 'default'
+
+/** Convert a companion numeric color (from combineRgb / colorpicker) to #RRGGBB hex string.
+ * Returns null when the input isn't a usable 0..0xFFFFFF integer so the caller can choose a fallback
+ * instead of silently sending black.
+ */
+function colorToHex(color: unknown): string | null {
+	if (typeof color !== 'number' || !Number.isFinite(color) || color < 0 || color > 0xffffff) {
+		return null
+	}
 	const r = (color >> 16) & 0xff
 	const g = (color >> 8) & 0xff
 	const b = color & 0xff
@@ -39,7 +50,7 @@ export function UpdateActions(self: ModuleInstance): void {
 				{
 					id: 'button_text',
 					type: 'textinput',
-					label: '',
+					label: 'Button Text Source (hidden)',
 					default: BUTTON_TEXT_VARIABLE,
 					useVariables: { local: true },
 					isVisibleExpression: 'false',
@@ -56,9 +67,9 @@ export function UpdateActions(self: ModuleInstance): void {
 					id: 'type',
 					type: 'dropdown',
 					label: 'Type',
-					default: '',
+					default: DEFAULT_TYPE_ID,
 					choices: [
-						{ id: '', label: 'Default' },
+						{ id: DEFAULT_TYPE_ID, label: 'Default' },
 						{ id: 'standard', label: 'Standard' },
 						{ id: 'todo', label: 'To Do' },
 						{ id: 'chapter', label: 'Chapter' },
@@ -79,16 +90,16 @@ export function UpdateActions(self: ModuleInstance): void {
 					isVisibleExpression: '$(options:override_color)',
 				},
 			],
-			callback: async (event) => {
+			callback: async (event, context) => {
+				// Local variables like $(this:page) only resolve through the per-call context.
+				// self.parseVariablesInString has no control context, so it returns the raw token.
 				let markerText: string
 				if (event.options.marker_source === 'button_text') {
-					// Read from hidden field — Companion resolves $(this:...) variables
-					// before passing the value, then we resolve the outer $(internal:...) variable
 					const raw = String(event.options.button_text || '')
-					markerText = await self.parseVariablesInString(raw)
+					markerText = await context.parseVariablesInString(raw)
 				} else {
 					const raw = String(event.options.text || 'Marker')
-					markerText = await self.parseVariablesInString(raw)
+					markerText = await context.parseVariablesInString(raw)
 				}
 
 				const overrideColor = Boolean(event.options.override_color)
@@ -99,9 +110,15 @@ export function UpdateActions(self: ModuleInstance): void {
 					text: markerText,
 				}
 				if (overrideColor) {
-					command.color = colorToHex(Number(event.options.color) || 0)
+					const hex = colorToHex(event.options.color)
+					if (hex === null) {
+						self.log('warn', `Custom color invalid (${String(event.options.color)}); using default`)
+						command.color = DEFAULT_MARKER_COLOR
+					} else {
+						command.color = hex
+					}
 				}
-				if (typeOverride) {
+				if (typeOverride && typeOverride !== DEFAULT_TYPE_ID) {
 					command.type = typeOverride
 				}
 
@@ -148,7 +165,8 @@ export function UpdateActions(self: ModuleInstance): void {
 
 		camera_fade: {
 			name: 'Camera Fade',
-			description: 'Fade to the standby camera. Records a fade transition to the timeline using the event’s configured fade duration.',
+			description:
+				'Fade to the standby camera. Records a fade transition to the timeline using the event’s configured fade duration.',
 			options: [],
 			callback: async () => {
 				self.connection.send({ command: 'camera_fade' })

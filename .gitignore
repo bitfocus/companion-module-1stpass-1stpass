@@ -1,5 +1,8 @@
 node_modules/
+package-lock.json
 /dist
 /*.tgz
 /pkg
 DEBUG-*
+/.yarn
+/.vscode

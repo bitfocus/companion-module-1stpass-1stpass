@@ -4,8 +4,14 @@
 	"main": "dist/main.js",
 	"type": "module",
 	"scripts": {
-		"build": "rimraf dist && tsc -p tsconfig.build.json",
-		"dev": "tsc -p tsconfig.build.json --watch"
+		"postinstall": "husky",
+		"format": "prettier -w .",
+		"package": "run build && companion-module-build",
+		"build": "rimraf dist && run build:main",
+		"build:main": "tsc -p tsconfig.build.json",
+		"dev": "tsc -p tsconfig.build.json --watch",
+		"lint:raw": "eslint",
+		"lint": "run lint:raw ."
 	},
 	"license": "MIT",
 	"repository": "https://github.com/bitfocus/companion-module-1stpass-1stpass",
@@ -20,10 +26,25 @@
 		"ws": "^8.18.0"
 	},
 	"devDependencies": {
-		"@companion-module/tools": "^2.6.1",
+		"@companion-module/tools": "^2.7.2",
 		"@types/node": "^22.19.3",
 		"@types/ws": "^8.18.1",
+		"eslint": "^9.39.4",
+		"husky": "^9.1.7",
+		"lint-staged": "^16.4.0",
+		"prettier": "^3.8.3",
 		"rimraf": "^6.1.2",
-		"typescript": "~5.9.3"
-	}
+		"typescript": "~5.9.3",
+		"typescript-eslint": "^8.59.0"
+	},
+	"prettier": "@companion-module/tools/.prettierrc.json",
+	"lint-staged": {
+		"*.{css,json,md,scss}": [
+			"prettier --write"
+		],
+		"*.{ts,tsx,js,jsx}": [
+			"yarn lint:raw --fix"
+		]
+	},
+	"packageManager": "yarn@4.12.0"
 }

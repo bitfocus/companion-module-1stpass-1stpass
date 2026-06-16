@@ -9,6 +9,7 @@ export function UpdateVariableDefinitions(self: ModuleInstance): void {
 		{ variableId: 'last_cut_timecode', name: 'Last Camera Cut Timecode' },
 		{ variableId: 'last_fade_timecode', name: 'Last Camera Fade Timecode' },
 		{ variableId: 'standby_camera', name: 'Standby Camera Name' },
+		{ variableId: 'last_error', name: 'Last Error' },
 	])
 
 	self.setVariableValues({
@@ -19,5 +20,6 @@ export function UpdateVariableDefinitions(self: ModuleInstance): void {
 		last_cut_timecode: '',
 		last_fade_timecode: '',
 		standby_camera: '',
+		last_error: '',
 	})
 }
