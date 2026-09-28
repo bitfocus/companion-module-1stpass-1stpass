@@ -43,7 +43,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 			],
 			feedbacks: [
 				{
-					feedbackId: 'camera_tally',
+					feedbackId: 'camera_tally_name',
 					options: { camera: number, use_camera_name: true },
 				},
 			],

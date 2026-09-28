@@ -1,4 +1,4 @@
-import { combineRgb } from '@companion-module/base'
+import { combineRgb, type CompanionActionDefinition } from '@companion-module/base'
 import type { ModuleInstance } from './main.js'
 
 // Companion internal variable that resolves to the button's display text
@@ -57,25 +57,119 @@ function noSuchCamera(self: ModuleInstance, camera: number): boolean {
 	return self.tally.hasReceivedState && !self.tally.get(camera)
 }
 
-/** One of the four exposure steppers.
+/** One camera control that a button can nudge up or down.
  *
- * `steps` is signed and positive means brighter: 1stPass hands the camera's own
- * value ladders to the app darkest-first, so `+1` raises EV and raises ISO on
- * every body without the module knowing anything about either.
+ * `key` becomes the action ids `camera_<key>_up` / `camera_<key>_down` and must
+ * never change once shipped — it is what a saved button refers to.
+ *
+ * `up` and `down` spell out what the press does, because `+` is not
+ * self-explanatory on most of these. 1stPass hands the app each camera's own
+ * value ladder darkest-first, so `+` means brighter on shutter, EV and ISO —
+ * but iris is deliberately the other way round, since an f-number *increases*
+ * as the lens closes, and that is the direction a shooter reads a lens in.
  */
-function stepAction(self: ModuleInstance, name: string, description: string, property: string, steps: number) {
+interface Stepper {
+	key: string
+	label: string
+	property: string
+	up: string
+	down: string
+}
+
+const EXPOSURE_STEPPERS: Stepper[] = [
+	{
+		key: 'iris',
+		label: 'Iris',
+		property: 'aperture',
+		up: 'closes the iris one stop (a higher f-number)',
+		down: 'opens the iris one stop (a lower f-number)',
+	},
+	{
+		key: 'shutter',
+		label: 'Shutter',
+		property: 'shutter',
+		up: 'lengthens the shutter one step (brighter)',
+		down: 'shortens the shutter one step (darker)',
+	},
+	{
+		key: 'ev',
+		label: 'EV',
+		property: 'exposure_compensation',
+		up: 'raises exposure compensation one step',
+		down: 'lowers exposure compensation one step',
+	},
+	{ key: 'iso', label: 'ISO', property: 'iso', up: 'raises ISO one step', down: 'lowers ISO one step' },
+	{
+		key: 'wb',
+		label: 'WB',
+		property: 'white_balance',
+		up: 'raises the color temperature one step (warmer picture)',
+		down: 'lowers the color temperature one step (cooler picture)',
+	},
+]
+
+/** The shading controls — the trims a shot gets painted with. Kept in their own
+ * list so the action picker reads in the order an operator works in.
+ */
+const SHADING_STEPPERS: Stepper[] = [
+	{
+		key: 'pedestal',
+		label: 'Master Pedestal',
+		property: 'master_pedestal',
+		up: 'lifts the black level one step',
+		down: 'crushes the black level one step',
+	},
+	{
+		key: 'wb_shift_ab',
+		label: 'WB Shift Amber/Blue',
+		property: 'wb_shift_amber_blue',
+		up: 'shifts white balance one step toward blue',
+		down: 'shifts white balance one step toward amber',
+	},
+	{
+		key: 'wb_shift_gm',
+		label: 'WB Shift Green/Magenta',
+		property: 'wb_shift_green_magenta',
+		up: 'shifts white balance one step toward magenta',
+		down: 'shifts white balance one step toward green',
+	},
+	{
+		key: 'saturation',
+		label: 'Saturation',
+		property: 'saturation',
+		up: 'raises saturation one step',
+		down: 'lowers saturation one step',
+	},
+	{
+		key: 'color_phase',
+		label: 'Color Phase',
+		property: 'color_phase',
+		up: 'rotates color phase one step toward magenta',
+		down: 'rotates color phase one step toward green',
+	},
+]
+
+/** Build the up/down pair of actions for one control. */
+function stepperActions(self: ModuleInstance, stepper: Stepper): Record<string, CompanionActionDefinition> {
+	const make = (steps: number, sign: string, what: string): CompanionActionDefinition => {
+		const name = `Camera ${stepper.label} ${sign}`
+		return {
+			name,
+			description: `On the camera bound to this cell, ${what}.`,
+			options: [cameraOption()],
+			callback: async (event) => {
+				const camera = Number(event.options.camera) || 1
+				if (noSuchCamera(self, camera)) {
+					self.log('debug', `Ignoring ${name} ${camera}: no such camera in 1stPass`)
+					return
+				}
+				self.connection.send({ command: 'camera_step', camera, property: stepper.property, steps })
+			},
+		}
+	}
 	return {
-		name,
-		description,
-		options: [cameraOption()],
-		callback: async (event: { options: Record<string, unknown> }): Promise<void> => {
-			const camera = Number(event.options.camera) || 1
-			if (noSuchCamera(self, camera)) {
-				self.log('debug', `Ignoring ${name} ${camera}: no such camera in 1stPass`)
-				return
-			}
-			self.connection.send({ command: 'camera_step', camera, property, steps })
-		},
+		[`camera_${stepper.key}_up`]: make(1, '+', stepper.up),
+		[`camera_${stepper.key}_down`]: make(-1, '−', stepper.down),
 	}
 }
 
@@ -235,30 +329,7 @@ export function UpdateActions(self: ModuleInstance): void {
 			},
 		},
 
-		camera_ev_up: stepAction(
-			self,
-			'Camera EV +',
-			'Raise exposure compensation one step on the camera bound to this cell.',
-			'exposure_compensation',
-			1,
-		),
-
-		camera_ev_down: stepAction(
-			self,
-			'Camera EV −',
-			'Lower exposure compensation one step on the camera bound to this cell.',
-			'exposure_compensation',
-			-1,
-		),
-
-		camera_iso_up: stepAction(self, 'Camera ISO +', 'Raise ISO one step on the camera bound to this cell.', 'iso', 1),
-
-		camera_iso_down: stepAction(
-			self,
-			'Camera ISO −',
-			'Lower ISO one step on the camera bound to this cell.',
-			'iso',
-			-1,
-		),
+		// Exposure first, then shading: ten controls, each with an up and a down.
+		...Object.assign({}, ...[...EXPOSURE_STEPPERS, ...SHADING_STEPPERS].map((s) => stepperActions(self, s))),
 	})
 }

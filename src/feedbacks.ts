@@ -27,14 +27,16 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 			},
 		},
 
-		camera_tally: {
+		camera_tally_name: {
 			// Advanced rather than boolean: the color is not a style the user
 			// configures for an on/off condition, it is computed from state that
 			// only 1stPass knows. That also lets one feedback carry the label and
 			// the text color alongside the background, so the whole button
 			// follows the app and the only thing to configure is a number.
 			type: 'advanced',
-			name: 'Camera Tally',
+			// Named for both things it does. "Camera Tally" undersold it — people
+			// added it for the color and were surprised to get the label too.
+			name: 'Camera Tally & Name',
 			description:
 				'Colors the button from 1stPass: red on program, green or blue on preview ' +
 				"(following that camera's own setting), dark when off air. Also labels the " +

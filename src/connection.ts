@@ -226,7 +226,7 @@ export class ConnectionManager {
 		values.standby_camera = this.self.tally.find('preview')?.name ?? ''
 
 		this.self.setVariableValues(values)
-		this.self.checkFeedbacks('camera_tally')
+		this.self.checkFeedbacks('camera_tally_name')
 	}
 
 	private watchForTallyState(): void {
@@ -350,7 +350,7 @@ export class ConnectionManager {
 		cleared.program_camera = ''
 		cleared.standby_camera = ''
 		this.self.setVariableValues(cleared)
-		this.self.checkFeedbacks('connection_status', 'camera_tally')
+		this.self.checkFeedbacks('connection_status', 'camera_tally_name')
 	}
 
 	private scheduleReconnect(): void {

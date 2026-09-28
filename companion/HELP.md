@@ -17,18 +17,35 @@ This module connects to [1stPass](https://1stpass.app) — a professional LTC ti
 
 ### Camera control
 
-These five reach the _physical camera_ bound to that cell in 1stPass, rather than the switcher. Each takes only a camera number.
+These reach the _physical camera_ bound to that cell in 1stPass, rather than the switcher. Each takes only a camera number.
 
 - **Camera Focus (AF push)** — One-shot autofocus. The camera must be in **manual focus**: this is the AF-ON gesture, and a body already autofocusing refuses it.
-- **Camera EV +** / **Camera EV −** — Move exposure compensation one step.
-- **Camera ISO +** / **Camera ISO −** — Move ISO one step.
 
-The steps walk the value ladder the camera itself publishes, so a press moves to the next value that body actually offers — not a number we guessed — and `+` always means brighter. The camera has to have a body bound to it in 1stPass (Cameras → Edit Camera → Control Source); a cell with nothing bound does nothing.
+Exposure:
+
+- **Camera Iris +** / **−** — `+` **closes** the iris, to a higher f-number. This is the one control where `+` means less light: an f-number rises as the lens shuts, and that is the direction a shooter reads a lens in.
+- **Camera Shutter +** / **−** — `+` lengthens the shutter, so brighter.
+- **Camera EV +** / **−** — Exposure compensation.
+- **Camera ISO +** / **−** — `+` raises ISO.
+- **Camera WB +** / **−** — Color temperature; `+` is warmer. Only movable while the camera's white balance is on a K setting — on auto or a preset the body owns the number and the press does nothing.
+
+Shading — the trims a shot gets painted with:
+
+- **Camera Master Pedestal +** / **−** — Black level; `+` lifts it.
+- **Camera WB Shift Amber/Blue +** / **−** — `+` toward blue, `−` toward amber.
+- **Camera WB Shift Green/Magenta +** / **−** — `+` toward magenta, `−` toward green.
+- **Camera Saturation +** / **−**
+- **Camera Color Phase +** / **−** — `+` rotates toward magenta.
+
+The steps walk the value ladder the camera itself publishes, so a press moves to the next value that body actually offers — not a number we guessed. The camera has to have a body bound to it in 1stPass (Cameras → Edit Camera → Control Source); a cell with nothing bound does nothing.
+
+Not every camera has every control. LUMIX bodies have no saturation or color phase to trim, and a fully manual or adapted lens has no iris the body can drive; those presses report that the camera is not reporting such a control, and change nothing. The same wording appears for a second or two right after a camera connects, while it is still telling 1stPass what it has — press again.
 
 A press that cannot be honored is **not** an error and leaves `last_error` alone — the module logs why and the button is unaffected. The usual reasons:
 
 - No camera body bound to that cell, or the body is not answering.
-- The camera's current mode owns the setting. A LUMIX in Creative Video has no exposure compensation at all, and neither does the app.
+- The camera's current mode owns the setting. A body in shutter priority owns the iris, one in Program owns both, a color temperature means nothing unless white balance is on K, and a LUMIX in Creative Video has no exposure compensation at all.
+- The camera is not reporting such a control — saturation and color phase on a LUMIX, or an iris on a lens the body cannot drive. Also briefly true just after a connect, before the camera has listed everything it has.
 - The setting is already at the end of its range.
 - The body is in AF, for a focus push.
 
@@ -36,12 +53,12 @@ A press that cannot be honored is **not** an error and leaves `last_error` alone
 
 The **Cameras** category has a ready-made button for each camera, 1 through 20. Drag one onto a button and it is finished — no options to fill in.
 
-Each preset combines the _Select Camera_ action with the _Camera Tally_ feedback, so pressing the button arms that camera and the button itself shows what the camera is doing. Cameras your show does not have stay blank and do nothing when pressed.
+Each preset combines the _Select Camera_ action with the _Camera Tally & Name_ feedback, so pressing the button arms that camera and the button itself shows what the camera is doing. Cameras your show does not have stay blank and do nothing when pressed.
 
 ## Feedbacks
 
 - **Connection Status** — Boolean feedback that changes the button appearance based on whether the module is currently connected to 1stPass.
-- **Camera Tally** — Colors _and labels_ the button from 1stPass. The only thing to set is the camera number:
+- **Camera Tally & Name** — Colors _and labels_ the button from 1stPass. The only thing to set is the camera number:
   - **Program** — red background.
   - **Preview** — green, or blue if that camera is set to blue preview in 1stPass (Cameras → Edit Camera → Preview Tally, for red/green color blindness). Program is always red.
   - **Off air** — dark background with the camera's own color on the text, so a tally light watching the button goes out.
