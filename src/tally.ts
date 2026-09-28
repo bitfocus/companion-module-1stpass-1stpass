@@ -28,15 +28,28 @@ export interface TallyCamera {
  * an operator who learned a different program color on one rig would be a
  * hazard on every other. Only "next" moves.
  *
- * These pairs are mirrored in two other places and must be kept in step:
+ * These pairs are mirrored in two other places:
  *   1stPass/Shared/Utils/Theme.swift  — accentError / accentSuccess / tallyPreviewBlue
- *   slate/slate-agent.py             — TallyController.PREVIEW_SRGB
- * The blue is Okabe-Ito #0072B2. Note the app and the Slate greens already
- * differ (32D74B vs pure 00FF00); this follows the app, because this button is
- * what sits next to the strip being compared against it.
+ *   slate/slate-agent.py             — TallyController.COLORS / PREVIEW_SRGB
+ *
+ * **Program and preview-green follow the Slate strip, not the app's palette.**
+ * A tally light that mirrors a Stream Deck key is a real tally, so what matters
+ * is agreeing with the lamp beside it rather than with the chrome on screen.
+ * The app's Apple dark-mode systemRed (#FF453A) is 255/69/58 — those green and
+ * blue channels read as a confident red against dark UI and as visibly *pink*
+ * on an LED with nothing to compare against, which is how this was noticed.
+ * The strip emits pure red, so this does too; same for green. Theme.swift keeps
+ * the Apple set for the on-screen chips, where it looks right.
+ *
+ * The blue is Okabe-Ito #0072B2, the reference for viewers with a color vision
+ * deficiency, and is already identical in all three places — leave it alone.
+ *
+ * Hue is all this can align. The Pi converts sRGB to LED duty through a 2.2
+ * gamma (`_srgb_to_led`) and a Stream Deck does not, so equal hex is still not
+ * equal brightness.
  */
-export const COLOR_PROGRAM = combineRgb(0xff, 0x45, 0x3a)
-export const COLOR_PREVIEW_GREEN = combineRgb(0x32, 0xd7, 0x4b)
+export const COLOR_PROGRAM = combineRgb(0xff, 0x00, 0x00)
+export const COLOR_PREVIEW_GREEN = combineRgb(0x00, 0xff, 0x00)
 export const COLOR_PREVIEW_BLUE = combineRgb(0x00, 0x72, 0xb2)
 export const COLOR_BLACK = combineRgb(0, 0, 0)
 export const COLOR_WHITE = combineRgb(0xff, 0xff, 0xff)
