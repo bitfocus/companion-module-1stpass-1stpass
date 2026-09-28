@@ -1,6 +1,7 @@
 import WebSocket from 'ws'
 import { InstanceStatus } from '@companion-module/base'
 import type { ModuleInstance } from './main.js'
+import { MAX_CAMERAS, type TallyCamera } from './tally.js'
 
 const RECONNECT_INTERVAL = 5000
 const PING_INTERVAL = 15000
@@ -8,6 +9,11 @@ const PING_INTERVAL = 15000
 const PONG_TIMEOUT = PING_INTERVAL * 2
 // Hard cap on a WebSocket handshake. ws does not enforce one by default.
 const CONNECT_TIMEOUT = 10000
+// How long to wait for the tally snapshot 1stPass sends on connect before
+// deciding this is an older build that does not push state. Without this the
+// symptom of a version mismatch is twenty permanently black buttons and no
+// diagnostics at all.
+const TALLY_SNAPSHOT_TIMEOUT = 3000
 
 function wsDataToString(data: WebSocket.Data): string {
 	if (typeof data === 'string') return data
@@ -42,6 +48,7 @@ export class ConnectionManager {
 	private reconnectTimer: ReturnType<typeof setTimeout> | null = null
 	private pingTimer: ReturnType<typeof setInterval> | null = null
 	private connectTimer: ReturnType<typeof setTimeout> | null = null
+	private tallyWatchTimer: ReturnType<typeof setTimeout> | null = null
 	private lastPongAt = 0
 	private intentionalClose = false
 	private self: ModuleInstance
@@ -106,6 +113,7 @@ export class ConnectionManager {
 			this.self.checkFeedbacks('connection_status')
 			this.lastPongAt = Date.now()
 			this.startPing()
+			this.watchForTallyState()
 		})
 
 		this.ws.on('pong', () => {
@@ -175,6 +183,13 @@ export class ConnectionManager {
 				return
 			}
 
+			// Switcher state, pushed unsolicited whenever it changes and once on
+			// connect. This is the only thing that drives the camera buttons.
+			if (msg.type === 'tally_state' && Array.isArray(msg.cameras)) {
+				this.handleTallyState(msg.cameras as TallyCamera[])
+				return
+			}
+
 			// Handle direct response format (native server)
 			if (msg.status) {
 				this.processResponse(msg as ServerResponse)
@@ -182,6 +197,46 @@ export class ConnectionManager {
 			}
 		} catch (err) {
 			this.self.log('warn', `Failed to parse message: ${err instanceof Error ? err.message : String(err)}`)
+		}
+	}
+
+	private handleTallyState(cameras: TallyCamera[]): void {
+		this.clearTallyWatch()
+		this.self.tally.update(cameras)
+
+		const values: Record<string, string> = {}
+		for (let n = 1; n <= MAX_CAMERAS; n++) {
+			const camera = this.self.tally.get(n)
+			values[`camera_${n}_name`] = camera?.name ?? ''
+			values[`camera_${n}_state`] = camera?.state ?? ''
+		}
+		// Also the authoritative writer for these two. They used to be set only
+		// from a select_camera reply — i.e. only when Companion itself moved
+		// preview — so cutting on the Mac left them quietly lying.
+		values.program_camera = this.self.tally.find('program')?.name ?? ''
+		values.standby_camera = this.self.tally.find('preview')?.name ?? ''
+
+		this.self.setVariableValues(values)
+		this.self.checkFeedbacks('camera_tally')
+	}
+
+	private watchForTallyState(): void {
+		this.clearTallyWatch()
+		this.tallyWatchTimer = setTimeout(() => {
+			this.tallyWatchTimer = null
+			if (this.self.tally.hasReceivedState) return
+			this.self.log(
+				'warn',
+				'Connected, but 1stPass never sent tally state. Camera buttons will stay blank. ' +
+					'This usually means 1stPass is older than this module — update the app.',
+			)
+		}, TALLY_SNAPSHOT_TIMEOUT)
+	}
+
+	private clearTallyWatch(): void {
+		if (this.tallyWatchTimer) {
+			clearTimeout(this.tallyWatchTimer)
+			this.tallyWatchTimer = null
 		}
 	}
 
@@ -253,9 +308,22 @@ export class ConnectionManager {
 			clearTimeout(this.connectTimer)
 			this.connectTimer = null
 		}
+		this.clearTallyWatch()
 		this.self.updateStatus(InstanceStatus.Disconnected)
-		this.self.setVariableValues({ connection_status: 'Disconnected' })
-		this.self.checkFeedbacks('connection_status')
+
+		// Forget the switcher state rather than freezing on it. The show carries
+		// on without us, so a button still glowing red is a lie — and a tally
+		// that lies is worse than one that is plainly dark.
+		this.self.tally.clear()
+		const cleared: Record<string, string> = { connection_status: 'Disconnected' }
+		for (let n = 1; n <= MAX_CAMERAS; n++) {
+			cleared[`camera_${n}_name`] = ''
+			cleared[`camera_${n}_state`] = ''
+		}
+		cleared.program_camera = ''
+		cleared.standby_camera = ''
+		this.self.setVariableValues(cleared)
+		this.self.checkFeedbacks('connection_status', 'camera_tally')
 	}
 
 	private scheduleReconnect(): void {
@@ -290,6 +358,7 @@ export class ConnectionManager {
 
 	private cleanup(): void {
 		this.stopPing()
+		this.clearTallyWatch()
 
 		if (this.reconnectTimer) {
 			clearTimeout(this.reconnectTimer)

@@ -150,6 +150,15 @@ export function UpdateActions(self: ModuleInstance): void {
 			],
 			callback: async (event) => {
 				const camera = Number(event.options.camera) || 1
+				// With a fixed set of camera presets, most surfaces carry buttons
+				// for cameras the show does not have. Sending those would come
+				// back an error and park it in `last_error`, which an operator may
+				// well have on a status button. Once the app has told us what
+				// exists, silently ignore the ones that do not.
+				if (self.tally.hasReceivedState && !self.tally.get(camera)) {
+					self.log('debug', `Ignoring select_camera ${camera}: no such camera in 1stPass`)
+					return
+				}
 				self.connection.send({ command: 'select_camera', camera })
 			},
 		},

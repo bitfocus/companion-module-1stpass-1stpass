@@ -4,12 +4,16 @@ import { UpdateVariableDefinitions } from './variables.js'
 import { UpgradeScripts } from './upgrades.js'
 import { UpdateActions } from './actions.js'
 import { UpdateFeedbacks } from './feedbacks.js'
+import { UpdatePresets } from './presets.js'
+import { TallyState } from './tally.js'
 
 import { ConnectionManager } from './connection.js'
 
 export class ModuleInstance extends InstanceBase<ModuleConfig> {
 	config!: ModuleConfig
 	connection!: ConnectionManager
+	/** Switcher state pushed by 1stPass. Drives the camera buttons. */
+	readonly tally = new TallyState()
 
 	constructor(internal: unknown) {
 		super(internal)
@@ -23,6 +27,7 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 
 		this.updateActions()
 		this.updateFeedbacks()
+		this.updatePresets()
 
 		this.updateVariableDefinitions()
 
@@ -50,6 +55,10 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 
 	updateFeedbacks(): void {
 		UpdateFeedbacks(this)
+	}
+
+	updatePresets(): void {
+		UpdatePresets(this)
 	}
 
 	updateVariableDefinitions(): void {

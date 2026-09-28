@@ -22,5 +22,5 @@
 	"legacyIds": [],
 	"manufacturer": "1stPass",
 	"products": ["1stPass"],
-	"keywords": ["timecode", "ltc", "markers", "titles"]
+	"keywords": ["timecode", "ltc", "markers", "titles", "tally", "camera", "switcher"]
 }
