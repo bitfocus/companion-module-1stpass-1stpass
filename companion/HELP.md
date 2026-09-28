@@ -15,6 +15,23 @@ This module connects to [1stPass](https://1stpass.app) — a professional LTC ti
 - **Camera Cut** — Cut to the standby camera (promotes standby to program) and record to the timeline.
 - **Camera Fade** — Fade to the standby camera and record the transition using the event's configured fade duration.
 
+### Camera control
+
+These five reach the _physical camera_ bound to that cell in 1stPass, rather than the switcher. Each takes only a camera number.
+
+- **Camera Focus (AF push)** — One-shot autofocus. The camera must be in **manual focus**: this is the AF-ON gesture, and a body already autofocusing refuses it.
+- **Camera EV +** / **Camera EV −** — Move exposure compensation one step.
+- **Camera ISO +** / **Camera ISO −** — Move ISO one step.
+
+The steps walk the value ladder the camera itself publishes, so a press moves to the next value that body actually offers — not a number we guessed — and `+` always means brighter. The camera has to have a body bound to it in 1stPass (Cameras → Edit Camera → Control Source); a cell with nothing bound does nothing.
+
+A press that cannot be honored is **not** an error and leaves `last_error` alone — the module logs why and the button is unaffected. The usual reasons:
+
+- No camera body bound to that cell, or the body is not answering.
+- The camera's current mode owns the setting. A LUMIX in Creative Video has no exposure compensation at all, and neither does the app.
+- The setting is already at the end of its range.
+- The body is in AF, for a focus push.
+
 ## Presets
 
 The **Cameras** category has a ready-made button for each camera, 1 through 20. Drag one onto a button and it is finished — no options to fill in.
@@ -51,4 +68,5 @@ This makes the button work with tally lights that mirror a Stream Deck button's 
 ## Requirements
 
 - [1stPass](https://apps.apple.com/us/app/1stpass/id6760574473) app running on macOS, with the Companion relay enabled.
+- The camera control actions (focus, EV, ISO) need 1stPass 1.2.0 build 94 or newer, and a camera with a control source bound to it. Against an older build the app answers `unknown_command`, which does land in `last_error`.
 - Tally feedback and the camera presets need 1stPass 1.2 or newer. Against an older build the camera buttons stay blank and the module logs a warning saying so; everything else still works.

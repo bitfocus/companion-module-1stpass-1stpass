@@ -31,6 +31,54 @@ function colorToHex(color: unknown): string | null {
 	).toUpperCase()
 }
 
+/** The camera-number field, shared by every per-camera action so they all read
+ * and behave the same on a button. Matches `select_camera`'s field exactly.
+ */
+function cameraOption() {
+	return {
+		id: 'camera',
+		type: 'number' as const,
+		label: 'Camera Number',
+		default: 1,
+		min: 1,
+		max: 99,
+	}
+}
+
+/** True when 1stPass has told us its camera list and this number isn't in it.
+ *
+ * A surface carries a button per camera whether or not the show has that many,
+ * so most rigs have buttons for cameras that don't exist. Sending to those would
+ * come back an error and park it in `last_error`, which an operator may well
+ * have on a status button. Until the app has told us what exists we send
+ * anyway — silence would be worse than a stray warning.
+ */
+function noSuchCamera(self: ModuleInstance, camera: number): boolean {
+	return self.tally.hasReceivedState && !self.tally.get(camera)
+}
+
+/** One of the four exposure steppers.
+ *
+ * `steps` is signed and positive means brighter: 1stPass hands the camera's own
+ * value ladders to the app darkest-first, so `+1` raises EV and raises ISO on
+ * every body without the module knowing anything about either.
+ */
+function stepAction(self: ModuleInstance, name: string, description: string, property: string, steps: number) {
+	return {
+		name,
+		description,
+		options: [cameraOption()],
+		callback: async (event: { options: Record<string, unknown> }): Promise<void> => {
+			const camera = Number(event.options.camera) || 1
+			if (noSuchCamera(self, camera)) {
+				self.log('debug', `Ignoring ${name} ${camera}: no such camera in 1stPass`)
+				return
+			}
+			self.connection.send({ command: 'camera_step', camera, property, steps })
+		},
+	}
+}
+
 export function UpdateActions(self: ModuleInstance): void {
 	self.setActionDefinitions({
 		create_marker: {
@@ -138,24 +186,10 @@ export function UpdateActions(self: ModuleInstance): void {
 		select_camera: {
 			name: 'Select Camera',
 			description: 'Set a camera to standby (preview). Does nothing if already in standby.',
-			options: [
-				{
-					id: 'camera',
-					type: 'number',
-					label: 'Camera Number',
-					default: 1,
-					min: 1,
-					max: 99,
-				},
-			],
+			options: [cameraOption()],
 			callback: async (event) => {
 				const camera = Number(event.options.camera) || 1
-				// With a fixed set of camera presets, most surfaces carry buttons
-				// for cameras the show does not have. Sending those would come
-				// back an error and park it in `last_error`, which an operator may
-				// well have on a status button. Once the app has told us what
-				// exists, silently ignore the ones that do not.
-				if (self.tally.hasReceivedState && !self.tally.get(camera)) {
+				if (noSuchCamera(self, camera)) {
 					self.log('debug', `Ignoring select_camera ${camera}: no such camera in 1stPass`)
 					return
 				}
@@ -181,5 +215,50 @@ export function UpdateActions(self: ModuleInstance): void {
 				self.connection.send({ command: 'camera_fade' })
 			},
 		},
+
+		// Camera body control. These reach the physical camera bound to that
+		// cell in 1stPass — not the switcher. A camera with no body bound, or
+		// one whose current mode owns the property, is a no-op the app reports
+		// back for the log; it is not an error and leaves `last_error` alone.
+		camera_focus: {
+			name: 'Camera Focus (AF push)',
+			description:
+				'Push one-shot autofocus on the camera bound to this cell. The camera must be in manual focus — a body already autofocusing refuses the push.',
+			options: [cameraOption()],
+			callback: async (event) => {
+				const camera = Number(event.options.camera) || 1
+				if (noSuchCamera(self, camera)) {
+					self.log('debug', `Ignoring camera_focus ${camera}: no such camera in 1stPass`)
+					return
+				}
+				self.connection.send({ command: 'camera_focus', camera })
+			},
+		},
+
+		camera_ev_up: stepAction(
+			self,
+			'Camera EV +',
+			'Raise exposure compensation one step on the camera bound to this cell.',
+			'exposure_compensation',
+			1,
+		),
+
+		camera_ev_down: stepAction(
+			self,
+			'Camera EV −',
+			'Lower exposure compensation one step on the camera bound to this cell.',
+			'exposure_compensation',
+			-1,
+		),
+
+		camera_iso_up: stepAction(self, 'Camera ISO +', 'Raise ISO one step on the camera bound to this cell.', 'iso', 1),
+
+		camera_iso_down: stepAction(
+			self,
+			'Camera ISO −',
+			'Lower ISO one step on the camera bound to this cell.',
+			'iso',
+			-1,
+		),
 	})
 }

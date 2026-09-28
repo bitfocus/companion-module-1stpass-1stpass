@@ -41,6 +41,15 @@ export interface ServerResponse {
 	camera_name?: string
 	error?: string
 	message?: string
+	// Camera body control (camera_focus / camera_step)
+	camera?: number
+	property?: string
+	value?: string
+	/** False when the app deliberately did nothing — no body bound to that
+	 * camera, its current mode owns the property, the ladder is already at its
+	 * end. Carried as a success precisely so it stays out of `last_error`. */
+	applied?: boolean
+	reason?: string
 }
 
 export class ConnectionManager {
@@ -263,6 +272,24 @@ export class ConnectionManager {
 				last_title_timecode: response.title.timecode,
 			})
 			this.self.log('info', `Title recorded: ${response.title.title1} @ ${response.title.timecode}`)
+		}
+
+		// Camera body control. No timecode — nothing is recorded to the timeline,
+		// a camera was moved — so this is answered before the timecode branches
+		// below and reported only to the log. A skipped press is not an error and
+		// must not reach `last_error`: on most rigs the majority of cameras have
+		// no body bound to them at all.
+		if (response.command === 'camera_focus' || response.command === 'camera_step') {
+			const what = response.property ? `${response.command} (${response.property})` : response.command
+			const which = response.camera === undefined ? '' : ` camera ${response.camera}`
+			if (response.applied === false) {
+				this.self.log('info', `${what}${which} did nothing: ${response.reason ?? 'no reason given'}`)
+			} else if (response.value) {
+				this.self.log('info', `${what}${which} → ${response.value}`)
+			} else {
+				this.self.log('info', `${what}${which} sent`)
+			}
+			return
 		}
 
 		// Native server format — select_camera (no timecode, has camera_name)
