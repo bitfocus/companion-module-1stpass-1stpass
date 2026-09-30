@@ -2,7 +2,7 @@
 	"id": "1stpass-1stpass",
 	"name": "1stpass-1stpass",
 	"shortname": "1stPass",
-	"description": "Control markers and titles in 1stPass",
+	"description": "Log markers and titles to timecode, switch cameras with tally, and control camera bodies",
 	"version": "0.0.0",
 	"license": "MIT",
 	"repository": "https://github.com/bitfocus/companion-module-1stpass-1stpass",
