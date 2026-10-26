@@ -268,6 +268,58 @@ export function UpdateActions(self: ModuleInstance): void {
 			},
 		},
 
+		quick_marker: {
+			name: 'Quick Marker',
+			description:
+				'Stamp a marker at the current timecode and put the cursor in 1stPass’s quick-marker field, so the director only types what happened and presses Return. Brings 1stPass to the front.',
+			options: [
+				{
+					id: 'type',
+					type: 'dropdown',
+					label: 'Type',
+					default: DEFAULT_TYPE_ID,
+					choices: [
+						{ id: DEFAULT_TYPE_ID, label: 'Default' },
+						{ id: 'standard', label: 'Standard' },
+						{ id: 'todo', label: 'To Do' },
+						{ id: 'chapter', label: 'Chapter' },
+					],
+				},
+				{
+					id: 'override_color',
+					type: 'checkbox',
+					label: 'Custom Color',
+					default: false,
+				},
+				{
+					id: 'color',
+					type: 'colorpicker',
+					label: 'Color',
+					default: combineRgb(0, 122, 255),
+					presetColors: PRESET_COLORS,
+					isVisibleExpression: '$(options:override_color)',
+				},
+			],
+			callback: async (event) => {
+				// Default type and no custom color mean "what the console last
+				// used" — the app fills those in, so they are left off the wire.
+				const command: Record<string, unknown> = { command: 'quick_marker' }
+				const typeOverride = String(event.options.type || '')
+				if (typeOverride && typeOverride !== DEFAULT_TYPE_ID) {
+					command.type = typeOverride
+				}
+				if (event.options.override_color) {
+					const hex = colorToHex(event.options.color)
+					if (hex === null) {
+						self.log('warn', `Custom color invalid (${String(event.options.color)}); using the console's`)
+					} else {
+						command.color = hex
+					}
+				}
+				self.connection.send(command)
+			},
+		},
+
 		next_title: {
 			name: 'Next Title',
 			description: 'Record the next title in sequence at the current timecode',

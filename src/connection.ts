@@ -325,6 +325,11 @@ export class ConnectionManager {
 					last_fade_timecode: response.timecode,
 				})
 				this.self.log('info', `Camera fade recorded @ ${response.timecode}`)
+			} else if (response.command === 'quick_marker') {
+				this.self.setVariableValues({
+					last_quick_marker_timecode: response.timecode,
+				})
+				this.self.log('info', `Quick marker started @ ${response.timecode}`)
 			}
 		}
 	}

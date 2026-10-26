@@ -50,5 +50,31 @@ export function UpdatePresets(self: ModuleInstance): void {
 		}
 	}
 
+	// The quick marker needs nothing set: the type and color come from the
+	// console until someone chooses otherwise in the button's options.
+	presets.quick_marker = {
+		type: 'button',
+		category: 'Markers',
+		name: 'Quick Marker',
+		style: {
+			text: 'QUICK\nMARKER',
+			size: '14',
+			color: COLOR_WHITE,
+			bgcolor: combineRgb(0x00, 0x7a, 0xff),
+		},
+		steps: [
+			{
+				down: [
+					{
+						actionId: 'quick_marker',
+						options: { type: 'default', override_color: false, color: combineRgb(0, 122, 255) },
+					},
+				],
+				up: [],
+			},
+		],
+		feedbacks: [],
+	}
+
 	self.setPresetDefinitions(presets)
 }

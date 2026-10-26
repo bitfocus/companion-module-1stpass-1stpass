@@ -9,6 +9,7 @@ Talks to the app over a WebSocket on the local network, so a Stream Deck drives 
 **Logging**
 
 - Create timecode markers from the button's own text, or from text you enter, with optional type (Standard / To Do / Chapter) and color
+- **Quick marker** for whatever has no button: one press stamps the moment and puts the cursor in 1stPass's marker field, so only the words are left to type, with an optional type and color per button
 - Record titles in sequence
 
 **Switching**
@@ -27,7 +28,7 @@ Each step walks the value ladder the camera itself publishes, so a press moves t
 
 **Status**
 
-- Connection status feedback, and variables for the last marker, title, cut and fade, the program and preview camera names, and every camera's name and state
+- Connection status feedback, and variables for the last marker, quick marker, title, cut and fade, the program and preview camera names, and every camera's name and state
 
 See [companion/HELP.md](companion/HELP.md) for setup, every action, and what each refusal means.
 

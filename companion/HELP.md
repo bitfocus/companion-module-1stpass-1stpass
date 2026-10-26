@@ -10,6 +10,7 @@ This module connects to [1stPass](https://1stpass.app) — a professional LTC ti
 ## Actions
 
 - **Create Marker** — Create a marker at the current timecode. By default uses the button's text as the marker name; switch to "Custom" to enter your own. Optional Type (Standard / To Do / Chapter) and custom color.
+- **Quick Marker** — For whatever has no button of its own. Stamps a marker at the current timecode, brings 1stPass to the front and puts the cursor in its quick-marker field, so the director types what happened and presses Return (Escape takes the marker back). Optional Type and custom color, so a "To Do, red" button leaves only the words to type; left on Default, the marker takes the type and color last used in the console. Pressing it again while a marker is being typed doesn't start a second one.
 - **Next Title** — Record the next title in the sequence at the current timecode.
 - **Select Camera** — Set a camera (1–99) to standby (preview). Does nothing if that camera is already in standby, or if 1stPass has no camera with that number.
 - **Camera Cut** — Cut to the standby camera (promotes standby to program) and record to the timeline.
@@ -55,6 +56,8 @@ The **Cameras** category has a ready-made button for each camera, 1 through 20. 
 
 Each preset combines the _Select Camera_ action with the _Camera Tally & Name_ feedback, so pressing the button arms that camera and the button itself shows what the camera is doing. Cameras your show does not have stay blank and do nothing when pressed.
 
+The **Markers** category has a **Quick Marker** button, ready as it is.
+
 ## Feedbacks
 
 - **Connection Status** — Boolean feedback that changes the button appearance based on whether the module is currently connected to 1stPass.
@@ -74,6 +77,7 @@ This makes the button work with tally lights that mirror a Stream Deck button's 
 - `last_marker_timecode` / `last_marker_text` — Most recent marker created.
 - `last_title_timecode` — Most recent title recorded.
 - `last_cut_timecode` / `last_fade_timecode` — Most recent cut/fade timecodes.
+- `last_quick_marker_timecode` — When the most recent quick marker was stamped.
 - `program_camera` — Name of the camera currently on program.
 - `standby_camera` — Name of the camera currently in standby (preview).
 - `camera_1_name` … `camera_20_name` — Camera names as configured in 1stPass. Empty for camera numbers the show does not have.
@@ -86,4 +90,5 @@ This makes the button work with tally lights that mirror a Stream Deck button's 
 
 - [1stPass](https://apps.apple.com/us/app/1stpass/id6760574473) app running on macOS, with the Companion relay enabled.
 - The camera control actions (focus, EV, ISO) need 1stPass 1.2.0 build 94 or newer, and a camera with a control source bound to it. Against an older build the app answers `unknown_command`, which does land in `last_error`.
+- Quick Marker needs 1stPass 1.2 build 143 or newer. Against an older build the app answers `unknown_command`, which lands in `last_error`.
 - Tally feedback and the camera presets need 1stPass 1.2 or newer. Against an older build the camera buttons stay blank and the module logs a warning saying so; everything else still works.
