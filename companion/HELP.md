@@ -1,6 +1,6 @@
 # 1stPass
 
-This module connects to [1stPass](https://1stpass.app) — a professional LTC timecode reader and event logger for video production. Log markers and titles in real time, synced to LTC timecode, and export directly to Final Cut Pro.
+This module connects to [1stPass](https://1stpass.app), the live production console for macOS that builds your first cut while the show is still on air. Every camera cut, fade, marker and title is logged the instant it happens, stamped with frame-accurate timecode from an LTC box or the Mac's own clock. When the show wraps, export a ready-to-edit multicam timeline straight to Final Cut Pro or DaVinci Resolve, with every cut already made and every marker and title already in place. Run the whole show from your Stream Deck, with live tally on every camera button.
 
 ## Configuration
 
